@@ -1,0 +1,17 @@
+services:
+  app:
+    image: webdevops/php-apache:8.3
+    container_name: order_sanitizer_app
+    ports:
+      - "8010:80"
+    volumes:
+      - ./:/app
+    working_dir: /app
+    environment:
+      WEB_DOCUMENT_ROOT: /app/public
+    networks:
+      - order_sanitizer_net
+
+networks:
+  order_sanitizer_net:
+    external: true
