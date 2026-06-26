@@ -98,6 +98,52 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="autoAssignModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Partidas autoasignables detectadas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    Estas partidas son pantallas en estatus 16 sin tienda. Se sugiere una tienda tomada de otra partida del mismo pedido.
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Pedido</th>
+                                <th>Partida pantalla</th>
+                                <th>Producto pantalla</th>
+                                <th>Tienda a asignar</th>
+                                <th>Partidas referencia</th>
+                            </tr>
+                        </thead>
+                        <tbody id="autoAssignTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div id="autoAssignMessage"></div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button class="btn btn-success" id="btnUseAutoAssign">
+                    Usar seleccionadas
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="{{ asset('js/sears/assign-partida.js') }}"></script>
 
 <script>

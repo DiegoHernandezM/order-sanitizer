@@ -144,37 +144,95 @@ class SearsImportController extends Controller
                 'relacion_pedidos.Nombre_producto as product_name',
                 'tienda.Nombre as store_name',
                 DB::raw("(
-                    SELECT rep.estatus_producto
-                    FROM relacion_estatus_productos rep
-                    WHERE rep.num_pedido = relacion_pedidos.Pedido
-                      AND (
-                            rep.id_relacion = relacion_pedidos.id
-                            OR rep.relacion_pedido = relacion_pedidos.id
-                      )
-                    LIMIT 1
-                ) as status_id"),
+                SELECT rep.estatus_producto
+                FROM relacion_estatus_productos rep
+                WHERE rep.num_pedido = relacion_pedidos.Pedido
+                  AND (
+                        rep.id_relacion = relacion_pedidos.id
+                        OR rep.relacion_pedido = relacion_pedidos.id
+                  )
+                LIMIT 1
+            ) as status_id"),
                 DB::raw("(
-                    SELECT tt.id_tienda
-                    FROM transferencias_tiendas tt
-                    WHERE tt.relacion_pedido = relacion_pedidos.Id
-                    ORDER BY tt.fecha_alta DESC
-                    LIMIT 1
-                ) as dispatch_store"),
+                SELECT tt.id_tienda
+                FROM transferencias_tiendas tt
+                WHERE tt.relacion_pedido = relacion_pedidos.Id
+                ORDER BY tt.fecha_alta DESC
+                LIMIT 1
+            ) as dispatch_store"),
                 DB::raw("(
-                    SELECT tt.estatus
-                    FROM transferencias_tiendas tt
-                    WHERE tt.relacion_pedido = relacion_pedidos.Id
-                    ORDER BY tt.fecha_alta DESC
-                    LIMIT 1
-                ) as transfer_status"),
+                SELECT tt.estatus
+                FROM transferencias_tiendas tt
+                WHERE tt.relacion_pedido = relacion_pedidos.Id
+                ORDER BY tt.fecha_alta DESC
+                LIMIT 1
+            ) as transfer_status"),
             ])
             ->orderBy('relacion_pedidos.Pedido')
             ->orderBy('relacion_pedidos.id')
             ->get();
 
+        $autoAssignableRows = DB::connection('sears')
+            ->table('relacion_pedidos as pantalla')
+            ->join('relacion_estatus_productos as rep', function ($join) {
+                $join->on('rep.num_pedido', '=', 'pantalla.Pedido')
+                    ->where(function ($q) {
+                        $q->whereColumn('rep.id_relacion', 'pantalla.id')
+                            ->orWhereColumn('rep.relacion_pedido', 'pantalla.id');
+                    });
+            })
+            ->leftJoin('transferencias_tiendas as tt_pantalla', 'tt_pantalla.relacion_pedido', '=', 'pantalla.id')
+            ->join('relacion_pedidos as partida_ref', function ($join) {
+                $join->on('partida_ref.Pedido', '=', 'pantalla.Pedido')
+                    ->whereColumn('partida_ref.id', '<>', 'pantalla.id');
+            })
+            ->join('transferencias_tiendas as tt_ref', 'tt_ref.relacion_pedido', '=', 'partida_ref.id')
+            ->whereIn('pantalla.Pedido', $orders)
+            ->where('pantalla.habilitado', 's')
+            ->where('partida_ref.habilitado', 's')
+            ->where('pantalla.Nombre_producto', 'LIKE', '%Pantalla%')
+            ->where('rep.estatus_producto', 16)
+            ->whereNull('tt_pantalla.id_tienda')
+            ->whereNotNull('tt_ref.id_tienda')
+            ->select([
+                'pantalla.Pedido as order_number',
+                'pantalla.id as screen_relation_id',
+                'pantalla.Nombre_producto as screen_product_name',
+                'rep.estatus_producto as status_id',
+                'partida_ref.id as reference_relation_id',
+                'partida_ref.Nombre_producto as reference_product_name',
+                'tt_ref.id_tienda as suggested_store',
+            ])
+            ->orderBy('pantalla.Pedido')
+            ->orderBy('pantalla.id')
+            ->get();
+
+        $autoAssignables = $autoAssignableRows
+            ->groupBy('screen_relation_id')
+            ->map(function ($rows) {
+                $first = $rows->first();
+
+                return [
+                    'order_number' => $first->order_number,
+                    'screen_relation_id' => $first->screen_relation_id,
+                    'screen_product_name' => $first->screen_product_name,
+                    'status_id' => $first->status_id,
+                    'suggested_store' => $first->suggested_store,
+                    'reference_items' => $rows->map(function ($row) {
+                        return [
+                            'relation_id' => $row->reference_relation_id,
+                            'product_name' => $row->reference_product_name,
+                            'store_id' => $row->suggested_store,
+                        ];
+                    })->values(),
+                ];
+            })
+            ->values();
+
         return response()->json([
             'success' => true,
             'items' => $items,
+            'auto_assignables' => $autoAssignables,
         ]);
     }
 

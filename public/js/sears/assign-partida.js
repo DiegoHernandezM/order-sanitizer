@@ -3,6 +3,7 @@ const assignPartida = {
     analyzeUrl: null,
     executeUrl: null,
     csrfToken: null,
+    autoAssignables: [],
 
     init(config) {
         this.importUrl = config.importUrl;
@@ -31,6 +32,10 @@ const assignPartida = {
                 document.getElementById("executionPreview")?.remove();
             }
         });
+
+        document
+            .getElementById("btnUseAutoAssign")
+            ?.addEventListener("click", () => this.useAutoAssignables());
     },
 
     getOrders() {
@@ -58,10 +63,12 @@ const assignPartida = {
     getSelectedItems() {
         const config = this.getExecutionConfig();
 
-        return [...document.querySelectorAll(".assign-item:checked")].map(
-            (input) => {
-                const detectedStore = input.dataset.store || "";
-                const finalStore = config.manualStore || detectedStore;
+        const items = [...document.querySelectorAll(".assign-item:checked")]
+            .map((input) => {
+                const detectedStore = String(input.dataset.store || "").trim();
+                const finalStore = String(
+                    config.manualStore || detectedStore || "",
+                ).trim();
 
                 return {
                     order_number: input.dataset.order,
@@ -69,8 +76,12 @@ const assignPartida = {
                     dispatch_store: finalStore,
                     detected_store: detectedStore,
                 };
-            },
-        );
+            })
+            .filter((item) => item.dispatch_store);
+
+        console.log("Items seleccionados:", items);
+
+        return items;
     },
 
     showMessage(message, type = "info") {
@@ -169,6 +180,10 @@ const assignPartida = {
             }
 
             this.renderAnalysis(data.items);
+
+            if (data.auto_assignables?.length) {
+                this.renderAutoAssignables(data.auto_assignables);
+            }
         } catch (error) {
             this.showMessage(error.message, "danger");
         }
@@ -371,7 +386,7 @@ const assignPartida = {
                 (item) => `
             <tr>
                 <td>
-                    <input type="checkbox" class="form-check-input assign-item" checked
+                    <input type="checkbox" class="form-check-input assign-item"
                         data-order="${item.order_number}"
                         data-relation="${item.relation_id}"
                         data-store="${item.dispatch_store || ""}">
@@ -431,6 +446,160 @@ const assignPartida = {
         throw new Error(
             `El servidor respondió con un formato no válido. HTTP ${response.status}. ${text.substring(0, 200)}`,
         );
+    },
+
+    renderAutoAssignables(items) {
+        this.autoAssignables = items || [];
+
+        const tbody = document.getElementById("autoAssignTableBody");
+
+        if (!tbody) return;
+
+        tbody.innerHTML = this.autoAssignables
+            .map((item, index) => {
+                const refs = (item.reference_items || [])
+                    .map(
+                        (ref) => `
+            <div>
+                <strong>${ref.relation_id}</strong> -
+                ${ref.product_name || ""}
+                <span class="badge bg-secondary">Tienda ${ref.store_id}</span>
+            </div>
+        `,
+                    )
+                    .join("");
+
+                return `
+            <tr>
+                <td>
+                    <input
+                        type="checkbox"
+                        class="form-check-input auto-assign-check"
+                        value="${index}"
+                    >
+                </td>
+                <td>${item.order_number}</td>
+                <td>${item.screen_relation_id}</td>
+                <td>${item.screen_product_name || ""}</td>
+                <td>
+                    <input
+                        type="number"
+                        class="form-control form-control-sm auto-assign-store"
+                        data-index="${index}"
+                        value="${item.suggested_store || ""}"
+                    >
+                </td>
+                <td>${refs}</td>
+            </tr>
+        `;
+            })
+            .join("");
+
+        const modal = new bootstrap.Modal(
+            document.getElementById("autoAssignModal"),
+        );
+
+        modal.show();
+    },
+
+    useAutoAssignables() {
+        const selected = [
+            ...document.querySelectorAll(".auto-assign-check:checked"),
+        ]
+            .map((input) => {
+                const index = input.value;
+                const item = this.autoAssignables[index];
+
+                const storeInput = document.querySelector(
+                    `.auto-assign-store[data-index="${index}"]`,
+                );
+
+                return {
+                    order_number: item.order_number,
+                    relation_id: item.screen_relation_id,
+                    product_name: item.screen_product_name,
+                    status_id: item.status_id,
+                    dispatch_store: String(
+                        storeInput?.value || item.suggested_store || "",
+                    ).trim(),
+                    transfer_status: "AUTO",
+                };
+            })
+            .filter((item) => item.dispatch_store);
+
+        if (!selected.length) {
+            document.getElementById("autoAssignMessage").innerHTML = `
+            <div class="alert alert-warning">
+                Selecciona al menos una partida con tienda destino.
+            </div>
+        `;
+            return;
+        }
+
+        this.appendAutoAssignableRows(selected);
+
+        const modal = bootstrap.Modal.getInstance(
+            document.getElementById("autoAssignModal"),
+        );
+
+        modal?.hide();
+
+        this.showExecutionMessage(
+            `Se agregaron ${selected.length} partida(s) autoasignables al análisis. Valida y confirma la asignación.`,
+            "success",
+        );
+    },
+    appendAutoAssignableRows(items) {
+        const tbody = document.querySelector("#analysisResult table tbody");
+
+        if (!tbody) {
+            this.renderAnalysis(items);
+            return;
+        }
+
+        items.forEach((item) => {
+            const exists = document.querySelector(
+                `.assign-item[data-relation="${item.relation_id}"]`,
+            );
+
+            if (exists) {
+                exists.checked = true;
+                exists.dataset.store = String(item.dispatch_store || "").trim();
+
+                const row = exists.closest("tr");
+                if (row) {
+                    row.classList.add("table-warning");
+                    row.children[5].innerHTML = item.dispatch_store;
+                    row.children[6].innerHTML = item.transfer_status || "AUTO";
+                }
+
+                return;
+            }
+
+            tbody.insertAdjacentHTML(
+                "beforeend",
+                `
+            <tr class="table-warning">
+                <td>
+                    <input
+                        type="checkbox"
+                        class="form-check-input assign-item"
+                        checked
+                        data-order="${item.order_number}"
+                        data-relation="${item.relation_id}"
+                        data-store="${String(item.dispatch_store || "").trim()}"
+                    >
+                </td>
+                <td>${item.order_number}</td>
+                <td>${item.relation_id}</td>
+                <td>${item.product_name || ""}</td>
+                <td>${item.status_id || ""}</td>
+                <td>${item.dispatch_store || '<span class="text-danger">Sin tienda</span>'}</td>
+                <td>${item.transfer_status || "AUTO"}</td>
+            </tr>
+        `,
+            );
+        });
     },
 };
 
