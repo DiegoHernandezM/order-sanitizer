@@ -228,6 +228,7 @@ class SearsImportController extends Controller
                 ];
             })
             ->values();
+        
 
         return response()->json([
             'success' => true,
