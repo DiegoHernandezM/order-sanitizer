@@ -83,6 +83,10 @@
        class="{{ request()->routeIs('sears.*') ? 'active' : '' }}">
         Status Sanitizer
     </a>
+    <a href="{{ url('/sears/assign-partida') }}"
+    class="{{ request()->is('sears/assign-partida') ? 'active' : '' }}">
+        Assign Partida
+    </a>
 </div>
 
 <main class="content">

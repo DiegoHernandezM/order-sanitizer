@@ -34,5 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'pc_services' => [
+        'base_url' => env('PC_SERVICES_BASE_URL'),
+        'token' => env('PC_SERVICES_TOKEN'),
+    ],
 
 ];

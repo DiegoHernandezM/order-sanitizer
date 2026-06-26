@@ -51,4 +51,9 @@ Route::prefix('sears')->group(function () {
     Route::post('/import', [SearsImportController::class, 'store']);
     Route::post('/sanitizations/analyze', [SearsAnalyzeController::class, 'store']);
     Route::post('/sanitizations/generate-script', [SearsScriptController::class, 'store']);
+
+    Route::post('/assign-partida/import', [SearsImportController::class, 'importAssignPartida']);
+    Route::post('/assign-partida/analyze', [SearsImportController::class, 'analyzeAssignPartida']);
+    Route::post('/assign-partida/execute', [SearsImportController::class, 'executeAssignPartida']);
+    Route::post('/assign-partida/auto', [SearsImportController::class, 'autoAssignPartidas']);
 });
