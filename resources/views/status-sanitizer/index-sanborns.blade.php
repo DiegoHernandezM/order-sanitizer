@@ -163,5 +163,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/status-sanborns-sanitizer.js') }}"></script>
+<script src="{{ asset('js/sanborns/status-sanborns-sanitizer.js') }}"></script>
 @endpush

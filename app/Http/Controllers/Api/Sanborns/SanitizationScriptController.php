@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Sanborns;
 
 use App\Http\Controllers\Controller;
-use App\Services\SanitizationScriptService;
+use App\Services\Sanborns\SanitizationScriptService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

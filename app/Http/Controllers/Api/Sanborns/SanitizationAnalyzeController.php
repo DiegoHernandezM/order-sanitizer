@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api\Sanborns;
 
 use App\Http\Controllers\Controller;
-use App\Services\SanitizationAnalyzeService;
+use App\Services\Sanborns\SanitizationAnalyzeService;
 use Illuminate\Http\Request;
 
 class SanitizationAnalyzeController extends Controller

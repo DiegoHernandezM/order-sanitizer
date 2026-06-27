@@ -156,5 +156,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/status-sears-sanitizer.js') }}"></script>
+<script src="{{ asset('js/sears/status-sears-sanitizer.js') }}"></script>
 @endpush
