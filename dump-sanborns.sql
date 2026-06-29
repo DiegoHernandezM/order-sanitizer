@@ -939,7 +939,7 @@ CREATE TABLE `comentarios_pedidos` (
   KEY `Id_Pedido` (`numero_pedido`),
   KEY `idx_Fecha` (`fecha`),
   KEY `idx_usuario` (`id_usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=119141961 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=119142004 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3036,7 +3036,7 @@ CREATE TABLE `historial_estatus_productos` (
   KEY `estatus_producto` (`estatus_producto`) USING BTREE,
   CONSTRAINT `historial_estatus_productos_ibfk_1` FOREIGN KEY (`num_pedido`) REFERENCES `pedidos` (`Num_pedido`),
   CONSTRAINT `historial_estatus_productos_ibfk_2` FOREIGN KEY (`id_relacion_pedido`) REFERENCES `relacion_pedidos` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=43372403 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43372489 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -6487,6 +6487,7 @@ DROP TABLE IF EXISTS `relacion_pedidos`;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `relacion_pedidos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `Tienda` int(11) DEFAULT NULL,
   `Pedido` int(10) unsigned DEFAULT NULL,
   `id_seller` int(11) NOT NULL,
   `nombre_seller` varchar(100) NOT NULL,
@@ -6520,6 +6521,7 @@ CREATE TABLE `relacion_pedidos` (
   `vinculado` tinyint(2) DEFAULT 0,
   `descuento` float(9,2) DEFAULT NULL,
   `tipo_mensajeria` char(1) DEFAULT '0',
+  `id_relacion_pedido_portal` int(11) DEFAULT NULL,
   `plan_de_pago` int(11) NOT NULL DEFAULT 0 COMMENT 'Plan de pago(MSI) por producto',
   `secuencia` int(11) NOT NULL DEFAULT 0 COMMENT 'Secuencia (Promoción) por producto',
   `fullfilment` tinyint(1) NOT NULL DEFAULT 0,
@@ -7720,4 +7722,4 @@ CREATE TABLE `ws_partner` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-06-22  9:54:37
+-- Dump completed on 2026-06-29 11:47:44

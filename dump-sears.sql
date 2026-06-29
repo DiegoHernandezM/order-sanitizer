@@ -2635,7 +2635,7 @@ CREATE TABLE `historial_estatus_productos` (
   KEY `fk_usuario_hist` (`id_usuario`),
   CONSTRAINT `historial_estatus_productos_ibfk_1` FOREIGN KEY (`num_pedido`) REFERENCES `pedidos` (`Num_pedido`),
   CONSTRAINT `historial_estatus_productos_ibfk_2` FOREIGN KEY (`id_relacion_pedido`) REFERENCES `relacion_pedidos` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=51542488 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=51542533 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4120,7 +4120,7 @@ CREATE TABLE `pedidos` (
   KEY `i_pedido_fecha` (`Fecha_Inicio`),
   KEY `idx_ped_fecstato` (`Fecha_Inicio`,`Estatus`,`tienda_origen`),
   KEY `idx_ped_ttv` (`total`,`total_venta`)
-) ENGINE=InnoDB AUTO_INCREMENT=12825002 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12854569 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -4887,7 +4887,7 @@ CREATE TABLE `productos` (
   KEY `idxEstatus` (`Estatus`,`Tienda`),
   KEY `actualizado_cron` (`Tienda`,`actualizado_cron`) USING BTREE,
   KEY `i_prod_portal` (`id_portal`)
-) ENGINE=InnoDB AUTO_INCREMENT=2985560 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2987122 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -5318,7 +5318,7 @@ CREATE TABLE `relacion_estatus_productos` (
   KEY `i_relacion_pedido` (`num_pedido`),
   KEY `irelpedido` (`relacion_pedido`) USING BTREE,
   KEY `idx_rep_numrel` (`num_pedido`,`relacion_pedido`)
-) ENGINE=InnoDB AUTO_INCREMENT=20119089 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20158222 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -5423,6 +5423,7 @@ CREATE TABLE `relacion_pedidos` (
   `id_categoria` int(11) NOT NULL,
   `categoria` varchar(100) NOT NULL,
   `Producto` int(10) unsigned DEFAULT NULL,
+  `Tienda` int(11) DEFAULT NULL,
   `Nombre_producto` mediumtext DEFAULT NULL,
   `Precio` double unsigned DEFAULT NULL,
   `precio_venta` double unsigned DEFAULT NULL COMMENT 'El precio reflejado en carrito con interes, descuento individual, etc.',
@@ -5460,7 +5461,7 @@ CREATE TABLE `relacion_pedidos` (
   KEY `Producto` (`Producto`),
   KEY `transferencia` (`transferencia`),
   KEY `i_id_seller_rel` (`id_seller`)
-) ENGINE=InnoDB AUTO_INCREMENT=20119008 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20158152 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -6288,7 +6289,7 @@ CREATE TABLE `transferencias_tiendas` (
   KEY `i_tt_estatus` (`estatus`),
   KEY `i_tt_indicador` (`indicador_consolidacion`),
   KEY `idx_td_numrel` (`num_pedido`,`relacion_pedido`)
-) ENGINE=InnoDB AUTO_INCREMENT=13689964 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13714198 DEFAULT CHARSET=utf8mb3 COLLATE=utf8mb3_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -6375,4 +6376,4 @@ CREATE TABLE `usuarios_api` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-06-22  9:53:56
+-- Dump completed on 2026-06-29 11:48:23

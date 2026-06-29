@@ -1,58 +1,244 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Order Sanitizer
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Herramienta para el análisis, saneamiento y generación de scripts de actualización de pedidos para los marketplaces **Sanborns** y **Sears**.
 
-## About Laravel
+## Tecnologías
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP 8.3
+- Laravel 12
+- MariaDB
+- Docker & Docker Compose
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+# Requisitos
 
-## Learning Laravel
+Antes de comenzar asegúrate de tener instalado:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Docker
+- Docker Compose
+- Git
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+# Clonar el proyecto
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repositorio>
+cd order-sanitizer
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+# Configuración
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 1. Crear archivo de entorno
 
-## Code of Conduct
+Copiar el archivo de ejemplo.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+cp .env.example .env
+```
 
-## Security Vulnerabilities
+Configurar las credenciales correspondientes.
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Base de datos local
 
-## License
+```env
+DB_HOST=mariadb_db
+DB_PORT=3306
+DB_DATABASE=saneador
+DB_USERNAME=root
+DB_PASSWORD=tu_password
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Bases de datos locales
+
+```env
+DB_SANBORNS_DATABASE=sanborns_store
+DB_SEARS_DATABASE=sears_store
+```
+
+### Bases de datos Productivas
+
+Completar las credenciales de acceso a las bases productivas.
+
+```env
+DB_PROD_SANBORNS_HOST=
+DB_PROD_SANBORNS_PORT=3306
+DB_PROD_SANBORNS_DATABASE=tienda
+DB_PROD_SANBORNS_USERNAME=
+DB_PROD_SANBORNS_PASSWORD=
+
+DB_PROD_SEARS_HOST=
+DB_PROD_SEARS_PORT=3308
+DB_PROD_SEARS_DATABASE=tienda
+DB_PROD_SEARS_USERNAME=
+DB_PROD_SEARS_PASSWORD=
+```
+
+---
+
+## 2. Levantar Docker
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+## 3. Instalar dependencias
+
+```bash
+docker exec -it order_sanitizer_app composer install
+```
+
+---
+
+## 4. Generar APP_KEY
+
+```bash
+docker exec -it order_sanitizer_app php artisan key:generate
+```
+
+---
+
+# Configuración de Base de Datos
+
+El proyecto utiliza tres bases de datos locales:
+
+| Base | Descripción |
+|-------|-------------|
+| saneador | Base principal de la aplicación |
+| sanborns_store | Información local de Sanborns |
+| sears_store | Información local de Sears |
+
+## Crear las bases
+
+```sql
+CREATE DATABASE saneador;
+CREATE DATABASE sanborns_store;
+CREATE DATABASE sears_store;
+```
+
+---
+
+## Restaurar dumps
+
+Dentro del directorio raíz del proyecto se encuentran los respaldos:
+
+```
+    sanborns_store.sql
+    sears_store.sql
+```
+
+Importar cada uno en su base correspondiente.
+
+Ejemplo:
+
+```bash
+docker exec -i mariadb_db mysql -u root -p sanborns_store < database/dumps/sanborns_store.sql
+```
+
+y
+
+```bash
+docker exec -i mariadb_db mysql -u root -p sears_store < database/dumps/sears_store.sql
+```
+
+---
+
+## Ejecutar migraciones
+
+La base principal (**saneador**) utiliza migraciones de Laravel.
+
+```bash
+docker exec -it order_sanitizer_app php artisan migrate
+```
+
+---
+
+# Limpiar cachés
+
+Si se modifica el archivo `.env`
+
+```bash
+docker exec -it order_sanitizer_app php artisan optimize:clear
+```
+
+---
+
+# Acceso
+
+La aplicación estará disponible en
+
+```
+http://localhost
+```
+
+---
+
+# Estructura de conexiones
+
+La aplicación trabaja con cinco conexiones de base de datos.
+
+| Conexión | Uso |
+|----------|-----|
+| mysql | Base principal del saneador |
+| sanborns | Base local Sanborns |
+| sears | Base local Sears |
+| prod | Base productiva Sanborns |
+| prod-se | Base productiva Sears |
+
+---
+
+# Flujo de trabajo
+
+El flujo esperado es el siguiente:
+
+1. Importar pedidos desde producción.
+2. Analizar inconsistencias.
+3. Generar script SQL.
+4. Ejecutar el script en la base correspondiente.
+
+---
+
+# Comandos útiles
+
+Levantar contenedores
+
+```bash
+docker compose up -d
+```
+
+Detener contenedores
+
+```bash
+docker compose down
+```
+
+Ver logs
+
+```bash
+docker compose logs -f
+```
+
+Entrar al contenedor
+
+```bash
+docker exec -it order_sanitizer_app bash
+```
+
+Limpiar caché
+
+```bash
+php artisan optimize:clear
+```
+
+Migraciones
+
+```bash
+php artisan migrate
+```
+
+---
