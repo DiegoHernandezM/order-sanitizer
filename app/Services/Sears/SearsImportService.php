@@ -186,7 +186,7 @@ class SearsImportService
             ->whereIn('pantalla.Pedido', $orders)
             ->where('pantalla.habilitado', 's')
             ->where('partida_ref.habilitado', 's')
-            ->where('pantalla.Nombre_producto', 'LIKE', '%Pantalla%')
+            //->where('pantalla.Nombre_producto', 'LIKE', '%Pantalla%')
             ->where('rep.estatus_producto', 16)
             ->whereNull('tt_pantalla.id_tienda')
             ->whereNotNull('tt_ref.id_tienda')
