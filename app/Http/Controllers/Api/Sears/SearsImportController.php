@@ -1,99 +1,95 @@
 <?php
 
-namespace App\Services\Sears;
+namespace App\Http\Controllers\Api\Sears;
 
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
-use RuntimeException;
+use App\Http\Controllers\Controller;
+use App\Services\Sears\SearsImportService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-class SearsImportService
+class SearsImportController extends Controller
 {
-    public function importFromProd(array $numerosPedido): array
+    public function __construct(
+        private readonly SearsImportService $searsImportService
+    ) {}
+
+    public function store(Request $request): JsonResponse
     {
-        $numerosPedido = collect($numerosPedido)
-            ->unique()
-            ->values()
-            ->all();
+        $validated = $request->validate([
+            'pedidos' => ['required', 'array', 'min:1'],
+            'pedidos.*' => ['required', 'integer'],
+        ]);
 
-        $pedidos = DB::connection('prod-se')
-            ->table('pedidos')
-            ->whereIn('Num_pedido', $numerosPedido)
-            ->get();
+        $result = $this->searsImportService->importFromProd(
+            $validated['pedidos']
+        );
 
-        if ($pedidos->isEmpty()) {
-            throw new RuntimeException('No se encontraron pedidos en PROD Sears.');
-        }
-
-        $estatusProductos = DB::connection('prod-se')
-            ->table('relacion_estatus_productos')
-            ->whereIn('num_pedido', $numerosPedido)
-            ->get();
-
-        $relacionPedidoIds = $estatusProductos
-            ->pluck('relacion_pedido')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-
-        $relacionPedidos = DB::connection('prod-se')
-            ->table('relacion_pedidos')
-            ->whereIn('id', $relacionPedidoIds)
-            ->get();
-
-        return DB::connection('sears')->transaction(function () use (
-            $pedidos,
-            $relacionPedidos,
-            $estatusProductos
-        ) {
-            $this->upsertCollection('pedidos', $pedidos, ['Num_pedido']);
-
-            $this->upsertCollection('relacion_pedidos', $relacionPedidos, ['id']);
-
-            $this->upsertCollection(
-                'relacion_estatus_productos',
-                $estatusProductos,
-                ['id_relacion']
-            );
-
-            return [
-                'pedidos_importados' => $pedidos->count(),
-                'relacion_pedidos_importados' => $relacionPedidos->count(),
-                'relacion_estatus_productos_importados' => $estatusProductos->count(),
-            ];
-        });
+        return response()->json([
+            'success' => true,
+            'message' => 'Importación desde PROD Sears completada correctamente.',
+            'data' => $result,
+        ]);
     }
 
-    private function upsertCollection(string $table, Collection $rows, array $uniqueBy): void
+    public function assignPartida()
     {
-        if ($rows->isEmpty()) {
-            return;
-        }
+        return view('sears.assign-partida');
+    }
 
-        $searsColumns = DB::connection('sears')
-            ->getSchemaBuilder()
-            ->getColumnListing($table);
+    public function importAssignPartida(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'orders' => ['required', 'string'],
+        ]);
 
-        $records = $rows
-            ->map(function ($row) use ($searsColumns) {
-                return collect((array) $row)
-                    ->only($searsColumns)
-                    ->toArray();
-            })
-            ->values()
-            ->all();
+        $orders = $this->searsImportService->importAssignPartidaFromProd(
+            $validated['orders']
+        );
 
-        $updateColumns = array_values(array_diff(
-            array_keys($records[0]),
-            $uniqueBy
-        ));
+        return response()->json([
+            'success' => true,
+            'message' => 'Pedidos Sears importados correctamente desde PROD.',
+            'orders' => $orders,
+        ]);
+    }
 
-        DB::connection('sears')
-            ->table($table)
-            ->upsert(
-                $records,
-                $uniqueBy,
-                $updateColumns
-            );
+    public function analyzeAssignPartida(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'orders' => ['required', 'string'],
+        ]);
+
+        $result = $this->searsImportService->analyzeAssignPartida(
+            $validated['orders']
+        );
+
+        return response()->json([
+            'success' => true,
+            'items' => $result['items'],
+            'auto_assignables' => $result['auto_assignables'],
+        ]);
+    }
+
+    public function executeAssignPartida(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'items' => ['required', 'array'],
+            'items.*.order_number' => ['required'],
+            'items.*.relation_id' => ['required'],
+            'items.*.dispatch_store' => ['required'],
+            'config.storeHeader' => ['required'],
+            'config.bearerToken' => ['required'],
+        ]);
+
+        $results = $this->searsImportService->executeAssignPartida(
+            $validated['items'],
+            $validated['config']
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Asignación Sears ejecutada en PC.',
+            'results' => $results,
+        ]);
     }
 }
