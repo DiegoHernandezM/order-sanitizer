@@ -52,4 +52,21 @@ class SanbornsImportController extends Controller
             'orders' => $orders,
         ]);
     }
+
+    public function analyzeAssignPartida(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'orders' => ['required', 'string'],
+        ]);
+
+        $result = $this->sanbornsImportService->analyzeAssignPartida(
+            $validated['orders']
+        );
+
+        return response()->json([
+            'success' => true,
+            'items' => $result['items'] ?? [],
+            'auto_assignables' => $result['auto_assignables'] ?? [],
+        ]);
+    }
 }

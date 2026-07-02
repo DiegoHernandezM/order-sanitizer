@@ -167,7 +167,12 @@ const assignPartida = {
 
             const data = await this.parseResponse(response);
 
+            console.log("STATUS:", response.status);
+            console.log("OK:", response.ok);
+            console.log("DATA:", data);
+
             if (!response.ok || !data.success) {
+                   console.log("response:", response);
                 this.showMessage(
                     data.message || "Ocurrió un error al analizar.",
                     "danger",
